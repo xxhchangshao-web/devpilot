@@ -1,0 +1,37 @@
+product: DevPilot
+requirement_pool: V1.0 基础版
+created_at: 2026-06-16T10:00:00
+source: ac-prd-generate
+modules:
+  - id: module-001
+    name: "用户登录"
+    name_en: "user-login"
+    latest_doc: "用户登录/latest/用户登录-latest.md"
+    requirement_doc: "用户登录/用户登录.md"
+    scope: fullstack
+    module_type: new
+    priority: 1
+  - id: module-002
+    name: "问题笔记管理"
+    name_en: "issue-note-management"
+    latest_doc: "问题笔记管理/latest/问题笔记管理-latest.md"
+    requirement_doc: "问题笔记管理/问题笔记管理.md"
+    scope: fullstack
+    module_type: new
+    priority: 2
+  - id: module-003
+    name: "标签分类"
+    name_en: "tag-management"
+    latest_doc: "标签分类/latest/标签分类-latest.md"
+    requirement_doc: "标签分类/标签分类.md"
+    scope: fullstack
+    module_type: new
+    priority: 3
+  - id: module-004
+    name: "Docker 部署"
+    name_en: "docker-deployment"
+    latest_doc: "Docker 部署/latest/Docker 部署-latest.md"
+    requirement_doc: "Docker 部署/Docker 部署.md"
+    scope: devops
+    module_type: new
+    priority: 4

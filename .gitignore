@@ -1,0 +1,29 @@
+# DevPilot
+
+# Runtime secrets
+.env
+.env.*
+!.env.example
+
+# Java / Maven
+target/
+*.log
+
+# Node / Vite
+node_modules/
+dist/
+frontend/coverage/
+frontend/tsconfig.tsbuildinfo
+
+# IDE and local tooling
+.idea/
+.vscode/
+.agents/
+.claude/
+.aspirecode/
+.gitnexus/
+
+# Local temporary files
+backend/temp_compile.bat
+.DS_Store
+Thumbs.db

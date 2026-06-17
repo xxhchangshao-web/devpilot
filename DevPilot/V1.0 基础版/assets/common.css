@@ -1,0 +1,196 @@
+/* ===== DevPilot - 科技蓝调风 (Tech Blue) 全局共享样式 ===== */
+
+:root {
+  --sidebar-width: 220px;
+  --header-height: 56px;
+  --sidebar-bg: #1e293b;
+  --header-bg: #0f172a;
+  --body-bg: #f1f5f9;
+  --primary-color: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: rgba(59, 130, 246, 0.1);
+  --active-bg: rgba(59, 130, 246, 0.15);
+  --active-border: #3b82f6;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-muted: #94a3b8;
+  --card-bg: #ffffff;
+  --border-color: #e2e8f0;
+  --danger-color: #ef4444;
+  --success-color: #22c55e;
+  --warning-color: #f59e0b;
+  --info-color: #3b82f6;
+  --sidebar-text: #cbd5e1;
+  --sidebar-active-text: #ffffff;
+}
+
+/* 基础 Reset */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', Arial, sans-serif;
+}
+body { background: var(--body-bg); }
+
+/* Vue 挂载前隐藏 */
+[v-cloak] { display: none !important; }
+
+/* ===== 布局 ===== */
+.layout { height: 100vh; }
+
+/* 侧边栏 */
+.sidebar .el-aside {
+  background: var(--sidebar-bg);
+  overflow-y: auto;
+}
+.sidebar-logo {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  user-select: none;
+}
+
+/* 侧栏菜单 */
+.sidebar .el-menu {
+  border-right: none;
+  background: var(--sidebar-bg);
+}
+.sidebar .el-menu .el-menu-item {
+  color: var(--sidebar-text);
+}
+.sidebar .el-menu .el-menu-item:hover {
+  background: var(--active-bg);
+  color: var(--sidebar-active-text);
+}
+.sidebar .el-menu .el-menu-item.is-active {
+  background: var(--active-bg);
+  color: var(--primary-color);
+  border-left: 3px solid var(--active-border);
+}
+
+/* 主区域 */
+.main-area .el-header {
+  background: var(--header-bg);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  color: #fff;
+}
+.main-area .el-main {
+  background: var(--body-bg);
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 顶栏 */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.topbar .header-breadcrumb .el-breadcrumb__inner {
+  color: rgba(255,255,255,0.7);
+}
+.topbar .header-breadcrumb .el-breadcrumb__inner.is-link:hover {
+  color: #fff;
+}
+.topbar .user-dropdown {
+  cursor: pointer;
+  color: rgba(255,255,255,0.85);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 内容区 */
+.main-content .el-card {
+  margin-bottom: 16px;
+}
+
+/* 筛选栏 */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+}
+.filter-bar .el-form-item {
+  margin-bottom: 0;
+}
+
+/* 操作栏 */
+.action-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.action-bar .left {
+  display: flex;
+  gap: 8px;
+}
+
+/* 分页容器 */
+.pagination-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+/* 标签颜色映射 */
+.tag-p0 { background: #fef2f2; color: var(--danger-color); border-color: #fecaca; }
+.tag-p1 { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+.tag-p2 { background: #eff6ff; color: var(--primary-color); border-color: #bfdbfe; }
+.tag-p3 { background: #f8fafc; color: var(--text-muted); border-color: #e2e8f0; }
+
+.tag-open { background: #eff6ff; color: var(--primary-color); border-color: #bfdbfe; }
+.tag-in-progress { background: #fffbeb; color: #d97706; border-color: #fde68a; }
+.tag-resolved { background: #f0fdf4; color: var(--success-color); border-color: #bbf7d0; }
+.tag-archived { background: #f8fafc; color: var(--text-muted); border-color: #e2e8f0; }
+
+/* 登录页 */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
+.login-card {
+  width: 400px;
+  padding: 40px;
+  background: var(--card-bg);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-card .login-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.login-card .login-logo h1 {
+  font-size: 24px;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+}
+.login-card .login-logo p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* 响应式 */
+@media (max-width: 1200px) {
+  :root { --sidebar-width: 64px; }
+  .sidebar-logo span { display: none; }
+  .sidebar .el-menu-item span { display: none; }
+}

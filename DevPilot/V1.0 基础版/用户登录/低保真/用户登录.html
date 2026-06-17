@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>登录 - DevPilot</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+  <link rel="stylesheet" href="../../assets/common.css" />
+  <style>
+    [v-cloak] { display: none !important; }
+    .login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+    .login-card { width: 400px; padding: 40px; background: #ffffff; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .login-card .login-logo { text-align: center; margin-bottom: 32px; }
+    .login-card .login-logo h1 { font-size: 26px; color: #1e293b; margin: 0 0 4px 0; }
+    .login-card .login-logo p { color: #94a3b8; font-size: 14px; margin: 0; }
+    .login-footer { text-align: center; margin-top: 24px; color: #94a3b8; font-size: 12px; }
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <div class="login-page">
+    <div class="login-card">
+      <div class="login-logo">
+        <h1>🚀 DevPilot</h1>
+        <p>工程问题排查助手</p>
+      </div>
+      <el-form :model="form" :rules="rules" ref="formRef" label-position="top">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" placeholder="请输入用户名" size="large" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" size="large" show-password></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" size="large" style="width:100%" :loading="loading" @click="handleLogin">登 录</el-button>
+        </el-form-item>
+      </el-form>
+      <div class="login-footer">v1.0.0 · Powered by DevPilot</div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/element-plus"></script>
+<script src="https://unpkg.com/element-plus/dist/locale/zh-cn.min.js"></script>
+<script src="https://unpkg.com/@element-plus/icons-vue"></script>
+
+<script>
+const { createApp, ref, reactive } = Vue;
+
+const app = createApp({
+  setup() {
+    const formRef = ref(null);
+    const loading = ref(false);
+    const form = reactive({ username: '', password: '' });
+    const rules = {
+      username: [{ required: true, message: '请输入用户名', trigger: 'blur' }, { min: 3, max: 50, message: '用户名长度 3-50 字符', trigger: 'blur' }],
+      password: [{ required: true, message: '请输入密码', trigger: 'blur' }, { min: 6, max: 100, message: '密码长度 6-100 字符', trigger: 'blur' }],
+    };
+
+    const handleLogin = () => {
+      formRef.value.validate((valid) => {
+        if (!valid) return;
+        loading.value = true;
+        setTimeout(() => {
+          loading.value = false;
+          if (form.username === 'demo' && form.password === 'DevPilotDemo2026!') {
+            localStorage.setItem('devpilot_token', 'mock-jwt-token-' + Date.now());
+            localStorage.setItem('devpilot_user', JSON.stringify({ username: form.username, role: 'viewer' }));
+            ElMessage.success('登录成功，正在跳转...');
+            setTimeout(() => { window.location.href = '../../问题笔记管理/低保真/问题笔记管理.html'; }, 500);
+          } else {
+            ElMessage.error('用户名或密码错误');
+          }
+        });
+      });
+    };
+
+    return { formRef, form, rules, loading, handleLogin };
+  }
+});
+
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) { app.component(key, component); }
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+app.mount('#app');
+</script>
+</body>
+</html>

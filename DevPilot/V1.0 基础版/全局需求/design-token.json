@@ -1,0 +1,166 @@
+{
+  "tokens": {
+    "color": {
+      "primary": "#3b82f6",
+      "primaryHover": "#2563eb",
+      "primaryActive": "#1d4ed8",
+      "primaryLight": "rgba(59, 130, 246, 0.1)",
+      "success": "#22c55e",
+      "warning": "#f59e0b",
+      "danger": "#ef4444",
+      "info": "#3b82f6",
+      "text": {
+        "primary": "#1e293b",
+        "secondary": "#64748b",
+        "muted": "#94a3b8",
+        "inverse": "#ffffff"
+      },
+      "background": {
+        "canvas": "#f1f5f9",
+        "surface": "#ffffff",
+        "sidebar": "#1e293b",
+        "topbar": "#0f172a"
+      },
+      "border": {
+        "default": "#e2e8f0",
+        "strong": "#cbd5e1",
+        "focus": "#3b82f6"
+      },
+      "status": {
+        "open": { "bg": "#eff6ff", "text": "#3b82f6" },
+        "inProgress": { "bg": "#fffbeb", "text": "#d97706" },
+        "resolved": { "bg": "#f0fdf4", "text": "#22c55e" },
+        "archived": { "bg": "#f8fafc", "text": "#94a3b8" }
+      },
+      "priority": {
+        "p0": { "bg": "#fef2f2", "text": "#ef4444" },
+        "p1": { "bg": "#fffbeb", "text": "#d97706" },
+        "p2": { "bg": "#eff6ff", "text": "#3b82f6" },
+        "p3": { "bg": "#f8fafc", "text": "#94a3b8" }
+      }
+    },
+    "typography": {
+      "fontFamily": {
+        "body": "\"PingFang SC\", \"Microsoft YaHei\", \"Helvetica Neue\", Helvetica, Arial, sans-serif"
+      },
+      "fontSize": {
+        "xs": "12px",
+        "sm": "13px",
+        "md": "14px",
+        "lg": "16px",
+        "xl": "18px",
+        "2xl": "24px"
+      },
+      "fontWeight": {
+        "regular": 400,
+        "medium": 500,
+        "semibold": 600,
+        "bold": 700
+      }
+    },
+    "spacing": {
+      "xs": "4px",
+      "sm": "8px",
+      "md": "12px",
+      "lg": "16px",
+      "xl": "20px",
+      "2xl": "24px"
+    },
+    "radius": {
+      "sm": "4px",
+      "md": "8px",
+      "lg": "12px"
+    },
+    "shadow": {
+      "card": "0 1px 3px rgba(0,0,0,0.08)",
+      "modal": "0 20px 60px rgba(0,0,0,0.3)",
+      "dropdown": "0 4px 12px rgba(0,0,0,0.12)"
+    },
+    "size": {
+      "sidebarWidth": "220px",
+      "topbarHeight": "56px",
+      "controlHeight": {
+        "sm": "32px",
+        "md": "36px",
+        "lg": "40px"
+      }
+    },
+    "zIndex": {
+      "base": 1,
+      "dropdown": 1000,
+      "overlay": 1200,
+      "modal": 1300,
+      "toast": 1400
+    }
+  },
+  "components": {
+    "button": {
+      "primary": {
+        "height": "36px",
+        "bg": "#3b82f6",
+        "text": "#ffffff",
+        "hoverBg": "#2563eb",
+        "radius": "4px"
+      },
+      "secondary": {
+        "height": "36px",
+        "bg": "#ffffff",
+        "text": "#1e293b",
+        "borderColor": "#e2e8f0"
+      }
+    },
+    "form": {
+      "labelWidth": "90px",
+      "controlHeight": "36px",
+      "errorColor": "#ef4444"
+    },
+    "table": {
+      "headerBg": "#f8fafc",
+      "rowHoverBg": "#f1f5f9",
+      "stripe": true,
+      "border": true
+    },
+    "card": {
+      "padding": "16px",
+      "bg": "#ffffff",
+      "shadow": "0 1px 3px rgba(0,0,0,0.08)",
+      "marginBottom": "16px"
+    },
+    "dialog": {
+      "width": {
+        "default": "600px",
+        "large": "800px",
+        "small": "400px",
+        "confirm": "420px"
+      },
+      "maskColor": "rgba(15, 23, 42, 0.45)"
+    },
+    "tag": {
+      "radius": "4px",
+      "paddingX": "8px",
+      "height": "24px",
+      "fontSize": "12px"
+    },
+    "sidebar": {
+      "itemHeight": "56px",
+      "activeBg": "rgba(59, 130, 246, 0.15)",
+      "activeBorder": "3px solid #3b82f6",
+      "textColor": "#cbd5e1",
+      "activeTextColor": "#3b82f6"
+    },
+    "login": {
+      "cardWidth": "400px",
+      "cardPadding": "40px",
+      "cardRadius": "12px",
+      "cardShadow": "0 20px 60px rgba(0,0,0,0.3)",
+      "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)"
+    }
+  },
+  "pageOverrides": {
+    "login": {
+      "layout": "centered",
+      "noSidebar": true,
+      "noTopbar": true
+    }
+  }
+}

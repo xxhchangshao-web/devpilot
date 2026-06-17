@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>问题笔记管理 - DevPilot</title>
+  <link rel="stylesheet" href="https://unpkg.com/element-plus/dist/index.css" />
+  <link rel="stylesheet" href="../../assets/common.css" />
+  <style>
+    [v-cloak] { display: none !important; }
+    .note-detail-page { max-width: 900px; margin: 0 auto; }
+    .note-detail-page .detail-header { margin-bottom: 20px; }
+    .note-detail-page .detail-header h2 { margin: 0 0 8px 0; color: var(--text-primary); }
+    .note-detail-page .detail-meta { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 16px; }
+    .note-detail-page .detail-body { margin-bottom: 16px; }
+    .note-detail-page .detail-body h4 { color: var(--text-secondary); font-size: 14px; margin: 16px 0 6px 0; }
+    .note-detail-page .detail-body p { color: var(--text-primary); line-height: 1.8; margin: 0; white-space: pre-wrap; }
+    .note-detail-page .detail-actions { margin-top: 24px; display: flex; gap: 8px; }
+  </style>
+</head>
+<body>
+<div id="app" v-cloak>
+  <el-container class="layout">
+    <!-- 侧边栏 -->
+    <el-aside :width="sidebarWidth" class="sidebar">
+      <div class="sidebar-logo"><span>🚀 DevPilot</span></div>
+      <el-menu :default-active="activeMenu" background-color="#1e293b" text-color="#cbd5e1" active-text-color="#3b82f6" @select="onMenuSelect">
+        <el-menu-item v-for="item in menuList" :key="item.key" :index="item.key">
+          <span>{{ item.label }}</span>
+        </el-menu-item>
+      </el-menu>
+    </el-aside>
+
+    <el-container class="main-area">
+      <!-- 顶部栏 -->
+      <el-header>
+        <div class="topbar">
+          <el-breadcrumb separator="/">
+            <el-breadcrumb-item>问题笔记管理</el-breadcrumb-item>
+            <el-breadcrumb-item>{{ viewMode === 'list' ? '列表' : '详情' }}</el-breadcrumb-item>
+          </el-breadcrumb>
+        </div>
+        <div>
+          <el-dropdown>
+            <span class="user-dropdown">{{ currentUser }} <el-icon><arrow-down></arrow-down></el-icon></span>
+            <template #dropdown>
+              <el-dropdown-item @click="handleLogout">退出登录</el-dropdown-item>
+            </template>
+          </el-dropdown>
+        </div>
+      </el-header>
+
+      <el-main>
+        <!-- ===== 列表视图 ===== -->
+        <template v-if="viewMode === 'list'">
+          <!-- 筛选栏 -->
+          <el-card shadow="never">
+            <el-form :inline="true" :model="query" class="filter-bar">
+              <el-form-item label="关键词">
+                <el-input v-model="query.keyword" placeholder="搜索标题/内容" clearable @keyup.enter="handleSearch"></el-input>
+              </el-form-item>
+              <el-form-item label="标签">
+                <el-select v-model="query.tagIds" placeholder="全部" clearable multiple collapse-tags collapse-tags-tooltip>
+                  <el-option v-for="t in tagOptions" :key="t.id" :label="t.name" :value="t.id"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="状态">
+                <el-select v-model="query.status" placeholder="全部" clearable>
+                  <el-option v-for="s in statusOptions" :key="s.value" :label="s.label" :value="s.value"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="优先级">
+                <el-select v-model="query.priority" placeholder="全部" clearable>
+                  <el-option v-for="p in priorityOptions" :key="p.value" :label="p.label" :value="p.value"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="分类">
+                <el-select v-model="query.category" placeholder="全部" clearable>
+                  <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item>
+                <el-button type="primary" @click="handleSearch">查询</el-button>
+                <el-button @click="handleReset">重置</el-button>
+              </el-form-item>
+            </el-form>
+          </el-card>
+
+          <!-- 表格 -->
+          <el-card shadow="never">
+            <div class="action-bar">
+              <div class="left">
+                <el-button type="primary" @click="handleAdd">+ 新建笔记</el-button>
+              </div>
+            </div>
+            <el-table style="width:100%" :data="filteredData" border stripe v-loading="loading">
+              <el-table-column type="index" label="#" width="55"></el-table-column>
+              <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip>
+                <template #default="{ row }">
+                  <el-button type="primary" link @click="handleDetail(row)">{{ row.title }}</el-button>
+                </template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态" width="100">
+                <template #default="{ row }">
+                  <el-tag :class="statusTagClass(row.status)" size="small" effect="plain">{{ statusLabel(row.status) }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="priority" label="优先级" width="80">
+                <template #default="{ row }">
+                  <el-tag :class="'tag-' + row.priority.toLowerCase()" size="small" effect="plain">{{ row.priority }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="category" label="分类" width="110">
+                <template #default="{ row }">{{ categoryLabel(row.category) }}</template>
+              </el-table-column>
+              <el-table-column prop="tags" label="标签" min-width="140">
+                <template #default="{ row }">
+                  <el-tag v-for="t in row.tags" :key="t" size="small" style="margin-right:4px;">{{ t }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column prop="updatedAt" label="更新时间" width="160"></el-table-column>
+            </el-table>
+            <div class="pagination-container">
+              <el-pagination v-model:current-page="pagination.page" v-model:page-size="pagination.size"
+                :page-sizes="[10,20,50]" :total="pagination.total"
+                layout="total, sizes, prev, pager, next, jumper"
+                @size-change="handleSearch" @current-change="handleSearch"></el-pagination>
+            </div>
+          </el-card>
+
+          <!-- 新建/编辑弹窗 -->
+          <el-dialog v-model="dialog.visible" :title="dialog.title" width="800px" destroy-on-close>
+            <el-form :model="dialog.form" :rules="dialog.rules" ref="formRef" label-width="90px">
+              <el-form-item label="标题" prop="title">
+                <el-input v-model="dialog.form.title" placeholder="请输入问题标题（1-200字）"></el-input>
+              </el-form-item>
+              <el-row :gutter="16">
+                <el-col :span="8">
+                  <el-form-item label="分类" prop="category">
+                    <el-select v-model="dialog.form.category" placeholder="请选择" style="width:100%">
+                      <el-option v-for="c in categoryOptions" :key="c.value" :label="c.label" :value="c.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="优先级" prop="priority">
+                    <el-select v-model="dialog.form.priority" placeholder="请选择" style="width:100%">
+                      <el-option v-for="p in priorityOptions" :key="p.value" :label="p.label" :value="p.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+                <el-col :span="8">
+                  <el-form-item label="状态" prop="status">
+                    <el-select v-model="dialog.form.status" placeholder="请选择" style="width:100%">
+                      <el-option v-for="s in statusOptions" :key="s.value" :label="s.label" :value="s.value"></el-option>
+                    </el-select>
+                  </el-form-item>
+                </el-col>
+              </el-row>
+              <el-form-item label="标签">
+                <el-select v-model="dialog.form.tags" placeholder="选择标签" multiple style="width:100%">
+                  <el-option v-for="t in tagOptions" :key="t.id" :label="t.name" :value="t.name"></el-option>
+                </el-select>
+              </el-form-item>
+              <el-form-item label="问题描述" prop="description">
+                <el-input v-model="dialog.form.description" type="textarea" :rows="4" placeholder="请描述问题现象..."></el-input>
+              </el-form-item>
+              <el-form-item label="排查过程">
+                <el-input v-model="dialog.form.investigation" type="textarea" :rows="3" placeholder="排查步骤（选填）..."></el-input>
+              </el-form-item>
+              <el-form-item label="解决方案">
+                <el-input v-model="dialog.form.solution" type="textarea" :rows="3" placeholder="解决方案（选填）..."></el-input>
+              </el-form-item>
+            </el-form>
+            <template #footer>
+              <el-button @click="dialog.visible = false">取消</el-button>
+              <el-button type="primary" @click="handleSubmit">确定</el-button>
+            </template>
+          </el-dialog>
+        </template>
+
+        <!-- ===== 详情视图 ===== -->
+        <template v-if="viewMode === 'detail'">
+          <el-card shadow="never">
+            <div class="note-detail-page">
+              <el-button type="default" @click="viewMode='list'" style="margin-bottom:16px;">← 返回列表</el-button>
+              <div class="detail-header">
+                <h2>{{ detailData.title }}</h2>
+              </div>
+              <div class="detail-meta">
+                <el-tag :class="statusTagClass(detailData.status)" effect="plain">{{ statusLabel(detailData.status) }}</el-tag>
+                <el-tag :class="'tag-' + detailData.priority.toLowerCase()" effect="plain">{{ detailData.priority }}</el-tag>
+                <el-tag type="info" effect="plain">{{ categoryLabel(detailData.category) }}</el-tag>
+                <el-tag v-for="t in detailData.tags" :key="t" size="small" effect="plain">{{ t }}</el-tag>
+                <span style="color:var(--text-muted);font-size:13px;">创建者：{{ detailData.creator }} | {{ detailData.createdAt }}</span>
+                <span style="color:var(--text-muted);font-size:13px;">更新：{{ detailData.updatedAt }}</span>
+              </div>
+              <div class="detail-body">
+                <h4>问题描述</h4>
+                <p>{{ detailData.description }}</p>
+                <h4>排查过程</h4>
+                <p>{{ detailData.investigation || '（暂无记录）' }}</p>
+                <h4>解决方案</h4>
+                <p>{{ detailData.solution || '（暂无记录）' }}</p>
+              </div>
+              <div class="detail-actions">
+                <el-button type="primary" @click="handleEditFromDetail">编辑</el-button>
+                <el-popconfirm title="确定删除该笔记？此操作不可撤销" @confirm="handleDeleteFromDetail">
+                  <template #reference><el-button type="danger">删除</el-button></template>
+                </el-popconfirm>
+                <el-dropdown @command="handleStatusChange">
+                  <el-button>更改状态<el-icon><arrow-down></arrow-down></el-icon></el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="OPEN" :disabled="detailData.status === 'OPEN'">待解决</el-dropdown-item>
+                      <el-dropdown-item command="IN_PROGRESS" :disabled="detailData.status === 'IN_PROGRESS'">排查中</el-dropdown-item>
+                      <el-dropdown-item command="RESOLVED" :disabled="detailData.status === 'RESOLVED'">已解决</el-dropdown-item>
+                      <el-dropdown-item command="ARCHIVED" :disabled="detailData.status === 'ARCHIVED'">已归档</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
+              </div>
+            </div>
+          </el-card>
+        </template>
+      </el-main>
+    </el-container>
+  </el-container>
+</div>
+
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/element-plus"></script>
+<script src="https://unpkg.com/element-plus/dist/locale/zh-cn.min.js"></script>
+<script src="https://unpkg.com/@element-plus/icons-vue"></script>
+
+<script>
+const { createApp, ref, reactive, computed } = Vue;
+
+const app = createApp({
+  setup() {
+    // 导航
+    const appName = ref('DevPilot');
+    const sidebarWidth = ref('220px');
+    const menuList = ref([
+      { key: '问题笔记管理', label: '📋 问题笔记', file: '问题笔记管理.html' },
+      { key: '标签分类', label: '🏷 标签管理', file: '../../标签分类/低保真/标签分类.html' },
+    ]);
+    const curFile = decodeURIComponent(location.pathname.split('/').pop() || location.href.split('/').pop() || '');
+    const activeMenu = ref(menuList.value.find(m => m.file === curFile)?.key || menuList.value[0]?.key || '问题笔记管理');
+    const onMenuSelect = (key) => {
+      const item = menuList.value.find(m => m.key === key);
+      if (item && item.file !== curFile) window.location.href = item.file;
+    };
+    const currentUser = computed(() => {
+      try { return JSON.parse(localStorage.getItem('devpilot_user') || '{}').username || '未登录'; }
+      catch(e) { return '未登录'; }
+    });
+    const handleLogout = () => { localStorage.removeItem('devpilot_token'); localStorage.removeItem('devpilot_user'); window.location.href = '../../用户登录/低保真/用户登录.html'; };
+
+    // 枚举选项
+    const statusOptions = [
+      { label: '待解决', value: 'OPEN' }, { label: '排查中', value: 'IN_PROGRESS' },
+      { label: '已解决', value: 'RESOLVED' }, { label: '已归档', value: 'ARCHIVED' },
+    ];
+    const priorityOptions = [
+      { label: 'P0 紧急', value: 'P0' }, { label: 'P1 高', value: 'P1' },
+      { label: 'P2 中', value: 'P2' }, { label: 'P3 低', value: 'P3' },
+    ];
+    const categoryOptions = [
+      { label: '性能问题', value: 'PERFORMANCE' }, { label: '异常/报错', value: 'EXCEPTION' },
+      { label: '配置问题', value: 'CONFIG' }, { label: '环境问题', value: 'ENVIRONMENT' },
+      { label: '业务逻辑', value: 'BUSINESS_LOGIC' }, { label: '其他', value: 'OTHER' },
+    ];
+    const tagOptions = ref([
+      { id: 1, name: 'JVM' }, { id: 2, name: 'OOM' }, { id: 3, name: '内存泄漏' }, { id: 4, name: '数据库' },
+      { id: 5, name: 'NPE' }, { id: 6, name: '线程池' }, { id: 7, name: 'Kubernetes' }, { id: 8, name: '网络超时' },
+    ]);
+
+    const statusLabel = (s) => ({ OPEN:'待解决', IN_PROGRESS:'排查中', RESOLVED:'已解决', ARCHIVED:'已归档' }[s] || s);
+    const statusTagClass = (s) => ({ OPEN:'tag-open', IN_PROGRESS:'tag-in-progress', RESOLVED:'tag-resolved', ARCHIVED:'tag-archived' }[s] || '');
+    const categoryLabel = (c) => {
+      const map = { PERFORMANCE:'性能问题', EXCEPTION:'异常/报错', CONFIG:'配置问题', ENVIRONMENT:'环境问题', BUSINESS_LOGIC:'业务逻辑', OTHER:'其他' };
+      return map[c] || c;
+    };
+
+    // Mock 数据
+    const allData = ref([
+      { id: 1, title: '线上服务 OOM 问题排查与解决', status: 'RESOLVED', priority: 'P0', category: 'PERFORMANCE', tags: ['JVM','OOM','内存泄漏'], description: '服务运行 3 天后频繁 Full GC，最终 OOM 崩溃。通过 jmap -histo 发现 ThreadLocal 持有大量对象未释放。', investigation: '1. jstat -gcutil 观察 GC 频率\n2. jmap -histo:live 导出堆对象分布\n3. MAT 分析发现 ThreadLocal 泄漏', solution: '修复 ThreadLocal.remove() 未调用的问题，增加定时清理机制。', creator: '张三', createdAt: '2026-06-10 09:30', updatedAt: '2026-06-15 14:20' },
+      { id: 2, title: '数据库连接池耗尽导致服务不可用', status: 'IN_PROGRESS', priority: 'P1', category: 'CONFIG', tags: ['数据库','连接池'], description: '高峰期大量慢查询导致 HikariCP 连接池耗尽，接口返回 503。', investigation: '1. 查看 HikariCP 监控指标\n2. 分析慢查询日志\n3. 发现未设置连接超时', solution: '', creator: '李四', createdAt: '2026-06-12 16:00', updatedAt: '2026-06-14 10:00' },
+      { id: 3, title: 'NPE 异常在生产环境偶发', status: 'OPEN', priority: 'P2', category: 'EXCEPTION', tags: ['NPE','空指针'], description: '订单服务在处理特定类型订单时偶发 NullPointerException，日志堆栈指向 OrderService.process() 方法。', investigation: '正在通过 Arthas watch 监控方法入参', solution: '', creator: '王五', createdAt: '2026-06-13 11:00', updatedAt: '2026-06-13 11:00' },
+      { id: 4, title: 'K8s Pod 频繁重启排查', status: 'RESOLVED', priority: 'P0', category: 'ENVIRONMENT', tags: ['Kubernetes','Pod'], description: '生产环境 Pod 每隔 30 分钟被 Kill 并重启，健康检查超时。', investigation: '1. kubectl describe pod 查看事件\n2. 发现 liveness probe 超时设置过短\n3. 启动时间超过 30s 但探针超时仅 10s', solution: '调整 liveness probe initialDelaySeconds 为 60s，timeoutSeconds 为 15s。', creator: '张三', createdAt: '2026-06-08 08:00', updatedAt: '2026-06-09 17:00' },
+      { id: 5, title: '微服务间调用超时分析', status: 'ARCHIVED', priority: 'P3', category: 'BUSINESS_LOGIC', tags: ['网络超时','微服务'], description: '服务 A 调用服务 B 偶尔超时 5s，排查后发现是服务 B 内部使用了同步阻塞 IO。', investigation: '已通过链路追踪定位', solution: '改为异步非阻塞调用方式，超时从 5s 降至 200ms。', creator: '李四', createdAt: '2026-05-20 14:00', updatedAt: '2026-06-01 09:00' },
+      { id: 6, title: 'Redis 缓存雪崩导致 DB 压力飙升', status: 'IN_PROGRESS', priority: 'P1', category: 'CONFIG', tags: ['数据库','Redis','缓存'], description: '热点数据缓存同时过期，请求全部打到数据库。', investigation: '1. 查看 Redis 慢日志\n2. 分析缓存过期时间分布\n3. 发现所有缓存设置了相同的过期时间', solution: '计划采用过期时间加随机偏移 + 缓存预热方案。', creator: '王五', createdAt: '2026-06-14 10:30', updatedAt: '2026-06-15 16:00' },
+    ]);
+
+    // 筛选
+    const query = reactive({ keyword: '', tagIds: [], status: '', priority: '', category: '' });
+    const loading = ref(false);
+    const filteredData = ref([...allData.value]);
+    const pagination = reactive({ page: 1, size: 10, total: allData.value.length });
+
+    const handleSearch = () => {
+      loading.value = true;
+      setTimeout(() => {
+        let data = [...allData.value];
+        if (query.keyword) {
+          const kw = query.keyword.toLowerCase();
+          data = data.filter(d => d.title.toLowerCase().includes(kw) || d.description.toLowerCase().includes(kw));
+        }
+        if (query.status) data = data.filter(d => d.status === query.status);
+        if (query.priority) data = data.filter(d => d.priority === query.priority);
+        if (query.category) data = data.filter(d => d.category === query.category);
+        if (query.tagIds.length > 0) {
+          const selectedNames = tagOptions.value.filter(t => query.tagIds.includes(t.id)).map(t => t.name);
+          data = data.filter(d => d.tags.some(t => selectedNames.includes(t)));
+        }
+        filteredData.value = data;
+        pagination.total = data.length;
+        pagination.page = 1;
+        loading.value = false;
+      }, 200);
+    };
+    const handleReset = () => {
+      query.keyword = ''; query.tagIds = []; query.status = ''; query.priority = ''; query.category = '';
+      handleSearch();
+    };
+
+    // 弹窗
+    const formRef = ref(null);
+    const dialog = reactive({
+      visible: false, title: '新建笔记', editingId: null,
+      form: { title: '', description: '', category: '', priority: 'P2', status: 'OPEN', tags: [], investigation: '', solution: '' },
+      rules: {
+        title: [{ required: true, message: '请输入标题', trigger: 'blur' }, { min:1, max:200, message:'标题1-200字符', trigger:'blur' }],
+        description: [{ required: true, message: '请输入问题描述', trigger: 'blur' }],
+        category: [{ required: true, message: '请选择分类', trigger: 'change' }],
+        priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
+      },
+    });
+    const handleAdd = () => {
+      dialog.title = '新建笔记'; dialog.editingId = null;
+      dialog.form = { title: '', description: '', category: '', priority: 'P2', status: 'OPEN', tags: [], investigation: '', solution: '' };
+      dialog.visible = true;
+    };
+    const handleEditFromDetail = () => {
+      dialog.title = '编辑笔记'; dialog.editingId = detailData.id;
+      dialog.form = {
+        title: detailData.title, description: detailData.description,
+        category: detailData.category, priority: detailData.priority,
+        status: detailData.status, tags: detailData.tags,
+        investigation: detailData.investigation, solution: detailData.solution,
+      };
+      dialog.visible = true;
+    };
+    const handleSubmit = () => {
+      formRef.value.validate((valid) => {
+        if (!valid) return;
+        const now = new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+        if (dialog.editingId) {
+          const idx = allData.value.findIndex(d => d.id === dialog.editingId);
+          if (idx >= 0) {
+            allData.value[idx] = { ...allData.value[idx], ...dialog.form, updatedAt: now };
+            if (viewMode === 'detail') detailData = { ...allData.value[idx] };
+          }
+          ElMessage.success('编辑成功');
+        } else {
+          const newId = Math.max(...allData.value.map(d => d.id), 0) + 1;
+          allData.value.unshift({
+            id: newId, ...dialog.form,
+            creator: currentUser.value, createdAt: now, updatedAt: now,
+          });
+          ElMessage.success('创建成功');
+        }
+        dialog.visible = false;
+        handleSearch();
+      });
+    };
+
+    // 详情
+    const viewMode = ref('list');
+    let detailData = reactive({});
+    const handleDetail = (row) => {
+      detailData = reactive({ ...row });
+      viewMode.value = 'detail';
+    };
+    const handleDeleteFromDetail = () => {
+      allData.value = allData.value.filter(d => d.id !== detailData.id);
+      ElMessage.success('删除成功');
+      viewMode.value = 'list';
+      handleSearch();
+    };
+    const handleStatusChange = (newStatus) => {
+      const idx = allData.value.findIndex(d => d.id === detailData.id);
+      if (idx >= 0) {
+        allData.value[idx].status = newStatus;
+        allData.value[idx].updatedAt = new Date().toLocaleString('zh-CN', { hour12: false }).replace(/\//g, '-');
+        detailData.status = newStatus;
+        detailData.updatedAt = allData.value[idx].updatedAt;
+      }
+      ElMessage.success('状态已更新');
+      handleSearch();
+    };
+
+    return {
+      appName, sidebarWidth, menuList, activeMenu, curFile, onMenuSelect, currentUser, handleLogout,
+      statusOptions, priorityOptions, categoryOptions, tagOptions,
+      statusLabel, statusTagClass, categoryLabel,
+      query, loading, filteredData, pagination, handleSearch, handleReset,
+      dialog, formRef, handleAdd, handleEditFromDetail, handleSubmit,
+      viewMode, detailData, handleDetail, handleDeleteFromDetail, handleStatusChange,
+    };
+  }
+});
+
+for (const [key, component] of Object.entries(ElementPlusIconsVue)) { app.component(key, component); }
+app.use(ElementPlus, { locale: ElementPlusLocaleZhCn });
+app.mount('#app');
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.devpilot.mapper.IssueNoteMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.devpilot.entity.IssueNote">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="description" property="description"/>
+        <result column="investigation" property="investigation"/>
+        <result column="solution" property="solution"/>
+        <result column="status" property="status"/>
+        <result column="priority" property="priority"/>
+        <result column="category" property="category"/>
+        <result column="creator_id" property="creatorId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="is_deleted" property="isDeleted"/>
+    </resultMap>
+
+    <!--
+        分页查询笔记列表（手写 SQL）
+        支持：keyword LIKE title/description、eq status/priority/category、inSql tagIds
+        默认按 updated_at 倒序，自动过滤逻辑删除记录
+    -->
+    <select id="selectPageWithConditions" resultMap="BaseResultMap">
+        SELECT *
+        FROM t_issue_note
+        WHERE is_deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND (title LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        <if test="priority != null and priority != ''">
+            AND priority = #{priority}
+        </if>
+        <if test="category != null and category != ''">
+            AND category = #{category}
+        </if>
+        <if test="tagIds != null and tagIds.size() > 0">
+            AND id IN (
+                SELECT note_id FROM t_note_tag
+                WHERE tag_id IN
+                <foreach collection="tagIds" item="tagId" open="(" separator="," close=")">
+                    #{tagId}
+                </foreach>
+            )
+        </if>
+        ORDER BY updated_at DESC
+    </select>
+
+</mapper>
