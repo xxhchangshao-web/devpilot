@@ -29,6 +29,22 @@
       </el-form-item>
 
       <el-form-item label="排查过程">
+        <template #label>
+          <span>
+            排查过程
+            <el-button
+              type="primary"
+              link
+              size="small"
+              :loading="aiLoading"
+              :disabled="!formData.description"
+              style="margin-left: 8px;"
+              @click="handleAiSuggest"
+            >
+              🤖 AI 排查建议
+            </el-button>
+          </span>
+        </template>
         <el-input
           v-model="formData.investigation"
           type="textarea"
@@ -116,6 +132,7 @@
 import { ref, reactive, watch } from 'vue'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { getTagListApi, type TagInfo } from '@/api/tags'
+import { aiApi } from '@/api/ai'
 
 // ========== Props & Emits ==========
 
@@ -158,6 +175,7 @@ const isEdit = ref(false)
 
 const formRef = ref<FormInstance>()
 const tagList = ref<TagInfo[]>([])
+const aiLoading = ref(false)
 
 const formData = reactive({
   title: '',
@@ -277,6 +295,25 @@ watch(
   },
   { immediate: true, deep: true }
 )
+
+/** AI 智能排查建议 */
+async function handleAiSuggest() {
+  if (!formData.description) return
+  aiLoading.value = true
+  try {
+    const categoryLabel = categoryOptions.find(c => c.value === formData.category)?.label
+    const res = await aiApi.suggest({
+      description: formData.description,
+      category: categoryLabel
+    })
+    formData.investigation = res.data.investigation
+    ElMessage.success('AI 排查建议已生成')
+  } catch {
+    ElMessage.error('AI 建议生成失败，请确认已配置 DEEPSEEK_API_KEY')
+  } finally {
+    aiLoading.value = false
+  }
+}
 
 /** 提交表单 */
 async function handleSubmit() {
